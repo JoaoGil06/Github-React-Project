@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 import {
   Container,
@@ -15,13 +16,57 @@ import RepoCard from "../../components/RepoCard";
 import RandomCalendar from "../../components/RandomCalendar";
 import TabContent from "../../components/TabContent";
 
+import { APIUser, APIRepo } from "../../@types";
+
+interface Data {
+  user?: APIUser;
+  repos?: APIRepo[];
+  error?: string;
+}
+
 const Profile: React.FC = () => {
+  const { username = "joaogil06" } = useParams();
+  const [data, setData] = useState<Data>();
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`https://api.github.com/users/${username}`),
+      fetch(`https://api.github.com/users/${username}/repos`),
+    ]).then(async (responses) => {
+      const [userResponse, reposResponse] = responses;
+
+      if (userResponse.status === 404) {
+        setData({ error: "User not found!" });
+        return;
+      }
+
+      const user = await userResponse.json();
+      const repos = await reposResponse.json();
+
+      const shuffledRepos = repos.sort(() => 0.5 - Math.random());
+      const slicedRepos = shuffledRepos.slice(0, 6);
+
+      setData({
+        user,
+        repos: slicedRepos,
+      });
+    });
+  }, [username]);
+
+  if (data?.error) {
+    return <h1>{data.error}</h1>;
+  }
+
+  if (!data?.user || !data?.repos) {
+    return <h1>Loading ...</h1>;
+  }
+
   return (
     <Container>
       <Tab className="desktop">
         <div className="wrapper">
           <span className="offset" />
-          <TabContent />
+          <TabContent repos={data.user?.public_repos} />
         </div>
 
         <span className="line" />
@@ -30,37 +75,35 @@ const Profile: React.FC = () => {
       <Main>
         <LeftSide>
           <ProfileData
-            username={"joaogil"}
-            name={"João Gil"}
-            avatarUrl={
-              "https://avatars0.githubusercontent.com/u/33355337?s=460&u=3c357e3a6e02e6aefbfe745db0a1af594f9906d7&v=4"
-            }
-            followers={887}
-            following={7}
-            company={"Empresa de teste"}
-            location={"Porto, Portugal"}
-            email={"joaogmonteiro06@gmail.com"}
-            blog={"https://www.linkedin.com/in/joaogil06/"}
+            username={data.user.login}
+            name={data.user.name}
+            avatarUrl={data.user.avatar_url}
+            followers={data.user.followers}
+            following={data.user.following}
+            company={data.user?.company}
+            location={data.user?.location}
+            email={data.user?.email}
+            blog={data.user?.blog}
           />
         </LeftSide>
         <RightSide>
           <Tab className="mobile">
-            <TabContent />
+            <TabContent repos={data.user?.public_repos} />
             <span className="line"></span>
           </Tab>
           <Repos>
             <h2>Random Repos</h2>
 
             <div>
-              {[1, 2, 3, 4, 5, 6].map((n) => (
+              {data.repos.map((repo) => (
                 <RepoCard
-                  key={n}
-                  username={"joaogil"}
-                  reponame={"githubproject"}
-                  description={"Github clone"}
-                  language={n % 3 === 0 ? "Javascript" : "Typescript"}
-                  stars={8}
-                  forks={4}
+                  key={repo.name}
+                  username={repo.owner.login}
+                  reponame={repo.name}
+                  description={repo.description}
+                  language={repo.language}
+                  stars={repo.stargazers_count}
+                  forks={repo.forks}
                 />
               ))}
             </div>
