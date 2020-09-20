@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
 
 import {
   Container,
@@ -12,39 +12,71 @@ import {
   GithubIcon,
 } from "./styles";
 
+import { APIRepo } from "../../@types";
+
+interface Data {
+  repo?: APIRepo;
+  error?: string;
+}
+
 const Repo: React.FC = () => {
+  const { username, reponame } = useParams();
+  const [data, setData] = useState<Data>();
+
+  useEffect(() => {
+    fetch(`https://api.github.com/repos/${username}/${reponame}`).then(
+      async (response) => {
+        setData(
+          response.status === 404
+            ? { error: "Repository not found!" }
+            : { repo: await response.json() }
+        );
+      }
+    );
+  }, [reponame, username]);
+
+  if (data?.error) {
+    return <h1>{data.error}</h1>;
+  }
+
+  if (!data?.repo) {
+    return <h1>Loading...</h1>;
+  }
+
   return (
     <Container>
       <Breadcrumb>
         <RepoIcon />
-        <Link className={"username"} to={"/joaogil"}>
-          joaogil
+
+        <Link className={"username"} to={`/${username}`}>
+          {username}
         </Link>
+
         <span>/</span>
 
-        <Link className={"reponame"} to={"/joaogil/github-react-project"}>
-          Github-React-Project
+        <Link className={"reponame"} to={`/${username}/${reponame}`}>
+          {reponame}
         </Link>
       </Breadcrumb>
 
-      <p>A Github clone developed with ReactJS </p>
+      <p>{data.repo.description}</p>
+
       <Stats>
         <li>
           <StarIcon />
-          <b>9</b>
+          <b>{data.repo.stargazers_count}</b>
           <span>stars</span>
         </li>
-
         <li>
           <ForkIcon />
-          <b>0</b>
+          <b>{data.repo.forks}</b>
           <span>forks</span>
         </li>
       </Stats>
 
-      <LinkButton href={"https://github.com/JoaoGil06/Github-React-Project"}>
+      <LinkButton href={data.repo.html_url}>
         <GithubIcon />
-        <span>View on Github</span>
+        <span>View on GitHub</span>
       </LinkButton>
     </Container>
   );
