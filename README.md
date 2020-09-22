@@ -1,7 +1,7 @@
 # Github clone with ReactJS
 
 ![Github clone preview desktop](https://github.com/JoaoGil06/Github-React-Project/blob/master/src/assets/githubcloneweb.gif) 
-![Github clone preview mobile](https://github.com/JoaoGil06/Github-React-Project/blob/master/src/assets/githubclonemobile.gif) \
+![Github clone preview mobile](https://github.com/JoaoGil06/Github-React-Project/blob/master/src/assets/githubclonemobile.gif)
 ### [Click here to see the live demo](https://githubclone.joaogil.dev/) 
 
 # Features
